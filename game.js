@@ -9,6 +9,9 @@ function adjustCanvasSize() {
 adjustCanvasSize();
 window.addEventListener('resize', adjustCanvasSize);
 
+let pipeTexture = new Image();
+pipeTexture.src = 'kepiting.png';  // Load the pipe texture
+
 let bird = {
     x: 50,
     y: canvas.height / 2,
@@ -22,7 +25,7 @@ let bird = {
 bird.sprite.src = 'mihu.png';
 
 let pipes = [];
-let pipeWidth = 20;
+let pipeWidth = 52;
 let pipeGap = 200;  // Increased gap size for easier navigation
 let pipeSpeed = 2;  // Reduced pipe speed for easier gameplay
 let pipeFrequency = 200;  // Increase the frequency value for less frequent pipes
@@ -46,11 +49,15 @@ function updateBird() {
 }
 
 function drawPipes() {
-    pipes.forEach(function(pipe) {
-        ctx.fillStyle = 'green';
-        ctx.fillRect(pipe.x, 0, pipeWidth, pipe.top);
-        ctx.fillRect(pipe.x, canvas.height - pipe.bottom, pipeWidth, pipe.bottom);
-    });
+    // Ensure the image is loaded before drawing
+    if (pipeTexture.complete) {
+        let pattern = ctx.createPattern(pipeTexture, 'repeat'); // Create a pattern that repeats the texture
+        ctx.fillStyle = pattern;
+        pipes.forEach(function(pipe) {
+            ctx.fillRect(pipe.x, 0, pipeWidth, pipe.top);
+            ctx.fillRect(pipe.x, canvas.height - pipe.bottom, pipeWidth, pipe.bottom);
+        });
+    }
 }
 
 function updatePipes() {
