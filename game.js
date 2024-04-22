@@ -1,27 +1,35 @@
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
-canvas.width = 320;
-canvas.height = 480;
+// Adjust the canvas size
+function adjustCanvasSize() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+}
+adjustCanvasSize();
+window.addEventListener('resize', adjustCanvasSize);
 
 let bird = {
     x: 50,
-    y: 150,
-    width: 34,  // Adjust based on your image size
-    height: 24, // Adjust based on your image size
+    y: canvas.height / 2,
+    width: 34,
+    height: 24,
     gravity: 0.6,
     lift: -15,
     velocity: 0,
     sprite: new Image()
 };
-
-bird.sprite.src = 'mihu.png';  // Make sure the path to your image is correct
+bird.sprite.src = 'mihu.png';
 
 let pipes = [];
 let pipeWidth = 20;
-let pipeGap = 100;
+let pipeGap = 200;  // Increased gap size for easier navigation
+let pipeSpeed = 2;  // Reduced pipe speed for easier gameplay
+let pipeFrequency = 200;  // Increase the frequency value for less frequent pipes
 let frame = 0;
 let score = 0;
+let gameRunning = true;
+let animationFrameId = null;  // ID untuk requestAnimationFrame
 
 function drawBird() {
     ctx.drawImage(bird.sprite, bird.x, bird.y, bird.width, bird.height);
@@ -46,18 +54,19 @@ function drawPipes() {
 }
 
 function updatePipes() {
-    if (frame % 60 === 0) {
-        let top = Math.floor(Math.random() * (canvas.height - pipeGap));
+    if (frame % pipeFrequency === 0) {  // Adjusted for less frequent pipes
+        let top = Math.floor(Math.random() * (canvas.height - pipeGap - 20)) + 10;  // Slightly randomize the top gap start
         let bottom = canvas.height - top - pipeGap;
         pipes.push({x: canvas.width, top: top, bottom: bottom});
     }
     pipes.forEach(function(pipe, index) {
-        pipe.x -= 2;
+        pipe.x -= pipeSpeed;  // Adjusted speed
         if (pipe.x + pipeWidth < 0) {
             score++;
             pipes.splice(index, 1);
         }
     });
+    
 }
 
 function handleCollision() {
@@ -71,28 +80,42 @@ function handleCollision() {
 
 function gameOver() {
     ctx.fillStyle = 'black';
-    ctx.fillText("Game Over!", 120, canvas.height / 2);
-    pipes = [];
-    bird.y = 150;
-    score = 0;
-    bird.velocity = 0;
+    ctx.font = "30px 'Press Start 2P'";
+    ctx.fillText("Game Over!", canvas.width / 2 - 150, canvas.height / 2);
+    gameRunning = false;
+    // animationFrameId = null;
+    setTimeout(function() {
+        pipes = [];
+        bird.y = canvas.height / 2;
+        score = 0;
+        bird.velocity = 0;
+        gameRunning = true;
+        frame = 0;
+        cancelAnimationFrame(animationFrameId);  // Batalkan frame yang sedang berjalan
+        gameLoop();  // Memulai loop game lagi
+    }, 2000);
 }
 
 canvas.addEventListener('click', function() {
-    bird.velocity += bird.lift;
+    if (gameRunning) {
+        bird.velocity += bird.lift;
+    }
 });
 
 function gameLoop() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    drawBird();
-    updateBird();
-    drawPipes();
-    updatePipes();
-    handleCollision();
-    ctx.fillStyle = 'black';
-    ctx.fillText(`Score: ${score}`, 10, 20);
-    frame++;
-    requestAnimationFrame(gameLoop);
+    if (gameRunning) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        drawBird();
+        updateBird();
+        drawPipes();
+        updatePipes();
+        handleCollision();
+        ctx.fillStyle = 'black';
+        ctx.font = "16px 'Press Start 2P'";  // Ukuran font dan font yang dipakai
+        ctx.fillText(`Score: ${score}`, 10, 50);  // Posisi teks score
+        frame++;
+    }
+    animationFrameId = requestAnimationFrame(gameLoop);  // Simpan ID frame
 }
 
 gameLoop();
